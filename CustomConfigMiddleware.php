@@ -9,6 +9,7 @@ class CustomConfigMiddleware
 {
   // storage
   protected $path = 'system/customConfig.txt';
+  public $allowed = ['model', 'site', 'mail'];
   /**
    * Handle an incoming request.
    *
@@ -19,7 +20,7 @@ class CustomConfigMiddleware
   public function handle($request, Closure $next)
   {
     if (Storage::exists($this->path)) {
-      $customConfig = unserialize(Storage::get($this->path));
+      $customConfig = array_only(unserialize(Storage::get($this->path)), $this->allowed);
       $config = config()->all();
       $replaced = array_replace_recursive($config, $customConfig);
       config($replaced);
@@ -32,6 +33,6 @@ class CustomConfigMiddleware
 
   public function save()
   {
-    return Storage::put($this->path, serialize(array_except(config()->all(), ['customConfig'])));
+    return Storage::put($this->path, serialize(array_only(config()->all(), $this->allowed)));
   }
 }
